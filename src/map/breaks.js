@@ -1,3 +1,5 @@
+import { theme } from '../theme.js'
+
 /** Nearest-rank quantiles: thresholds are observed values, shared by all years. */
 export function createClassification(values, classCount = 5) {
   if (!Number.isInteger(classCount) || classCount < 1 || classCount > 5) {
@@ -8,7 +10,7 @@ export function createClassification(values, classCount = 5) {
   const breaks = [...new Set(Array.from({ length: classCount - 1 }, (_, index) =>
     sorted[Math.ceil(sorted.length * (index + 1) / classCount) - 1],
   ))].filter((value) => value !== undefined && value < sorted.at(-1))
-  const palette = ['#e1f0e9', '#b0d9c6', '#73b99e', '#368a73', '#125343']
+  const palette = theme.mapColors
   const count = sorted.length ? breaks.length + 1 : 0
   const colors = Array.from({ length: count }, (_, index) =>
     palette[count === 1 ? 2 : Math.round(index * (palette.length - 1) / (count - 1))],

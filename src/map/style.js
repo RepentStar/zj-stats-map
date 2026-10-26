@@ -2,8 +2,9 @@ import Fill from 'ol/style/Fill.js'
 import Stroke from 'ol/style/Stroke.js'
 import Style from 'ol/style/Style.js'
 import Text from 'ol/style/Text.js'
+import { theme } from '../theme.js'
 
-export const NO_DATA_COLOR = '#d9dfe2'
+export const NO_DATA_COLOR = theme.noData
 
 export function createCityStyle(store, classifications) {
   const cache = new Map()
@@ -22,7 +23,7 @@ export function createCityStyle(store, classifications) {
       cache.set(key, [
         new Style({
           fill: new Fill({ color: index < 0 ? NO_DATA_COLOR : classification.colors[index] }),
-          stroke: new Stroke({ color: selected ? '#df8a28' : '#ffffff', width: selected ? 3 : 1.5 }),
+          stroke: new Stroke({ color: selected ? theme.selection : theme.mapBoundary, width: selected ? 3 : 1.2 }),
           zIndex: selected ? 2 : 0,
         }),
         new Style({
@@ -30,8 +31,8 @@ export function createCityStyle(store, classifications) {
           text: new Text({
             text: store.regions.get(adcode).short_name,
             font: `${selected ? '700' : '500'} 13px "Microsoft YaHei", sans-serif`,
-            fill: new Fill({ color: '#183e37' }),
-            stroke: new Stroke({ color: '#ffffff', width: 3 }),
+            fill: new Fill({ color: selected ? theme.selection : theme.ink }),
+            stroke: new Stroke({ color: theme.mapLabelOutline, width: 3 }),
           }),
           zIndex: selected ? 4 : 3,
         }),
