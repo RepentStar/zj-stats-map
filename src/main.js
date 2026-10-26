@@ -22,7 +22,6 @@ app.innerHTML = `
         <button type="button" data-open="controls">控制面板</button>
         <button type="button" data-open="legend">图例</button>
         <button type="button" data-open="timeline">时间轴</button>
-        <button type="button" data-open="notes">数据说明</button>
         <button type="button" id="reset-view">返回全省</button>
         <button type="button" id="close-all">关闭全部</button>
         <button type="button" data-open="charts" class="primary">＋ 新建图表</button>
@@ -72,12 +71,7 @@ async function bootstrap() {
       target.className = 'chart-canvas'
       target.setAttribute('role', 'img')
       target.setAttribute('aria-label', `${context.textContent}，${chartNames[type]}`)
-      const note = document.createElement('p')
-      note.className = 'chart-note'
-      note.textContent = type === 'line'
-        ? '2020 年起含普查口径调整，2025 年为初步数据。点击数据点可切换地图年份。'
-        : `${year === 2025 ? '2025 年为初步数据。' : ''}${type === 'pie' ? '占比按当前范围内有效人口值计算，缺失值不计入。' : '缺失值不参与排名。'}点击图形可选择城市。`
-      panel.body.append(context, message, target, note)
+      panel.body.append(context, message, target)
       const loadChart = async () => {
         message.replaceChildren(document.createTextNode('正在生成图表…'))
         message.hidden = false
@@ -114,7 +108,6 @@ async function bootstrap() {
         const panel = windows.open({ key: 'controls', title: '地图控制', width: 310, placement: 'controls', trigger })
         if (!panel.isNew) return
         panel.body.innerHTML = `
-          <p class="panel-intro">浙江省 11 个地级市</p>
           <div class="indicator-picker"></div>
           <p class="map-context"></p>
           <div class="selection-heading"><h3>选择城市 <span class="selection-count"></span></h3><button type="button" class="clear-selection">清空</button></div>
@@ -132,7 +125,7 @@ async function bootstrap() {
         })
         const render = ({ year, indicator, selectedCities }) => {
           const metadata = store.indicators.get(indicator)
-          panel.body.querySelector('.map-context').textContent = `${year} 年${year === 2025 ? ' · 初步数据' : ''}`
+          panel.body.querySelector('.map-context').textContent = `${year} 年`
           panel.body.querySelector('.selection-count').textContent = selectedCities.length ? `(${selectedCities.length})` : ''
           panel.body.querySelector('.clear-selection').disabled = !selectedCities.length
           for (const [city, button] of buttons) {
@@ -141,9 +134,11 @@ async function bootstrap() {
             button.setAttribute('aria-label', `${city.short_name}，${value}${value === '无数据' ? '' : metadata.unit}`)
             button.title = `${city.short_name}：${value} ${metadata.unit}`
           }
-          panel.body.querySelector('.selection-summary').textContent = selectedCities.length
+          const summary = panel.body.querySelector('.selection-summary')
+          summary.hidden = !selectedCities.length
+          summary.textContent = selectedCities.length
             ? `已选 ${selectedCities.map((code) => store.regions.get(code).short_name).join('、')}`
-            : '点击地图或城市名称可多选。'
+            : ''
         }
         render(store.getState())
         panel.onClose(store.subscribe(render))
@@ -165,32 +160,12 @@ async function bootstrap() {
         const panel = windows.open({ key: 'charts', title: '新建图表', width: 320, placement: 'chooser', trigger })
         if (!panel.isNew) return
         panel.body.innerHTML = `
-          <p class="panel-intro">每次生成一个独立窗口</p>
           <div class="chart-choices">
             <button type="button" data-chart="pie"><strong>人口占比</strong><span>环形图 · 各市常住人口构成</span></button>
             <button type="button" data-chart="rank"><strong>城市排行</strong><span>条形图 · 当前指标大小对比</span></button>
             <button type="button" data-chart="line"><strong>历年趋势</strong><span>折线图 · 多城市年度变化</span></button>
-          </div>
-          <p class="chart-note">保留生成时的年份、指标与城市范围。未选城市时使用全省 11 市。</p>`
+          </div>`
         panel.body.querySelectorAll('[data-chart]').forEach((button) => button.addEventListener('click', () => openChart(button.dataset.chart, button)))
-      },
-      notes(trigger) {
-        const panel = windows.open({ key: 'notes', title: '数据说明', width: 350, placement: 'chooser', trigger })
-        if (!panel.isNew) return
-        panel.body.classList.add('data-notes')
-        const note = document.createElement('p')
-        note.textContent = store.indicators.get('pop_resident').note
-        panel.body.append(note)
-        for (const text of [
-          '人口密度读取预计算值；缺失值显示为“无数据”，不补零。密度采用城市排行和趋势图展示。',
-          '人口占比按当前范围内各市常住人口合计计算，不提供人口密度占比。',
-          '图表保留创建时的条件，切换地图不会改写已有图表。再次生成可对比不同年份或城市范围。',
-          '边界原始来源、许可、坐标参考与区划年份尚待确认。',
-        ]) {
-          const paragraph = document.createElement('p')
-          paragraph.textContent = text
-          panel.body.append(paragraph)
-        }
       },
     }
     const toolbar = document.querySelector('.workspace-tools')

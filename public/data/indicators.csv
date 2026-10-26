@@ -1,3 +1,3 @@
 indicator,label,unit,decimals,category,type,formula,source,direction,note
-pop_resident,常住人口,万人,1,人口,raw,,统计年鉴,neutral,2020年起含普查口径调整;2025年为初步数据
+pop_resident,常住人口,万人,1,人口,raw,,统计年鉴,neutral,
 pop_density,人口密度,人/km²,1,人口,derived,pop_resident*10000/area_land,预计算,neutral,

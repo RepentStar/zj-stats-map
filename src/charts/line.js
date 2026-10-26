@@ -1,10 +1,10 @@
 import { init, use } from 'echarts/core'
 import { LineChart } from 'echarts/charts'
-import { AriaComponent, GridComponent, LegendComponent, MarkAreaComponent, MarkLineComponent, TooltipComponent } from 'echarts/components'
+import { AriaComponent, GridComponent, LegendComponent, MarkLineComponent, TooltipComponent } from 'echarts/components'
 import { SVGRenderer } from 'echarts/renderers'
 import { createLineOption } from './lineOptions.js'
 
-use([LineChart, GridComponent, LegendComponent, MarkAreaComponent, MarkLineComponent, TooltipComponent, AriaComponent, SVGRenderer])
+use([LineChart, GridComponent, LegendComponent, MarkLineComponent, TooltipComponent, AriaComponent, SVGRenderer])
 
 export function createLineChart({ target, store, onSelectYear }) {
   const chart = init(target, null, { renderer: 'svg' })

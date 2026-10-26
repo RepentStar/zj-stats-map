@@ -37,25 +37,24 @@ test('line series retain null gaps, stable city colors, and only selected cities
   assert.deepEqual(createLineOption(store).series, [])
 })
 
-test('year and indicator changes update annotations and precomputed values', () => {
+test('year and indicator changes update the current-year marker and precomputed values', () => {
   const store = createFixture()
   store.setState({ selectedCities: ['330100', '330200'], year: 2020, indicator: 'pop_density' })
   const option = createLineOption(store)
   assert.equal(option.series[0].markLine.data[0].xAxis, '2020')
-  assert.equal(option.series[0].markArea.data[0][1].xAxis, '2020')
   assert.equal(option.series[1].markLine, undefined)
   assert.equal(option.series[0].data[0][1], 6048)
   assert.ok(option.series[1].data.every(([, value]) => value === null))
   assert.equal(option.yAxis.name, '人/km²')
 })
 
-test('tooltips show missing values, units, census adjustments, and provisional values', () => {
+test('tooltips show years, city values, missing values, and units', () => {
   const store = createFixture()
   store.setState({ selectedCities: ['330100', '330200'] })
   const option = createLineOption(store)
   assert.match(option.tooltip.formatter([{ axisValue: '2019' }]), /杭州：无数据/)
-  assert.match(option.tooltip.formatter([{ axisValue: '2020' }]), /口径调整/)
-  assert.match(option.tooltip.formatter([{ axisValue: '2025' }]), /初步数据/)
+  assert.equal(option.tooltip.formatter([{ axisValue: '2020' }]), '2020 年\n杭州：2,020.0 万人\n宁波：4,040.0 万人')
+  assert.equal(option.tooltip.formatter([{ axisValue: '2025' }]), '2025 年\n杭州：2,025.0 万人\n宁波：4,050.0 万人')
   assert.match(option.tooltip.formatter([{ axisValue: '2016' }]), /万人/)
 })
 
@@ -67,7 +66,7 @@ test('registered ECharts modules render the full trend as SVG', () => {
     chart.setOption(createLineOption(store))
     const svg = chart.renderToSVGString()
     assert.match(svg, /<svg/)
-    for (const label of ['杭州', '宁波', '2016', '2025', '普查口径调整', '当前 2025', '万人']) {
+    for (const label of ['杭州', '宁波', '2016', '2025', '当前 2025', '万人']) {
       assert.ok(svg.includes(label), `missing chart label: ${label}`)
     }
   } finally {

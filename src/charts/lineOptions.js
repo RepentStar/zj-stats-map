@@ -6,12 +6,11 @@ export function createLineOption(store) {
   const metadata = store.indicators.get(indicator)
   const cities = [...store.regions.values()].filter((region) => region.level === 'city')
   const hasSelection = selectedCities.length > 0
-  const censusStart = store.years.findLast((pointYear) => pointYear < 2020) ?? 2020
   return {
     animation: false,
     backgroundColor: 'transparent',
     textStyle: { fontFamily: '"Microsoft YaHei", sans-serif', color: theme.muted },
-    aria: { enabled: true, label: { description: `${metadata.label}历年变化，当前年份 ${year} 年。2020 年起含普查口径调整，2025 年为初步数据。` } },
+    aria: { enabled: true, label: { description: `${metadata.label}历年变化，当前年份 ${year} 年。` } },
     legend: { ...chartLegend, type: 'scroll', top: 4, left: 12, right: 12, selectedMode: false },
     grid: { left: 76, right: 28, top: 90, bottom: 42 },
     tooltip: {
@@ -24,8 +23,6 @@ export function createLineOption(store) {
           const value = store.getValue(indicator, hoveredYear, adcode)
           return `${store.regions.get(adcode).short_name}：${formatValue(value, metadata)}${value === null ? '' : ` ${metadata.unit}`}`
         })
-        if (hoveredYear === 2020) lines.push('2020 年起含普查口径调整')
-        if (hoveredYear === 2025) lines.push('2025 年为初步数据')
         return [`${hoveredYear} 年`, ...lines].join('\n')
       },
     },
@@ -53,11 +50,6 @@ export function createLineOption(store) {
           data: [{ xAxis: String(year), name: '当前年份',
             lineStyle: { color: theme.accent, width: 2, type: 'dashed' },
             label: { formatter: `当前 ${year}`, position: 'insideEndTop', color: theme.accent, backgroundColor: theme.surface, padding: [3, 5] } }],
-        },
-        markArea: {
-          silent: true, itemStyle: { color: '#efbf7614' },
-          label: { color: theme.selection, position: 'insideBottom', fontSize: 11 },
-          data: store.years.includes(2020) ? [[{ name: '2020 年普查口径调整', xAxis: String(censusStart) }, { xAxis: '2020' }]] : [],
         },
       } : {}),
     })),

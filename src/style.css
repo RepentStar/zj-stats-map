@@ -65,7 +65,6 @@ h3 { font-size: 13px; font-weight: 600; }
 .placement-chooser { top: 88px; right: 16px; }
 .placement-chart { top: calc(88px + var(--cascade)); right: calc(360px + var(--cascade)); }
 .placement-center { top: 30%; left: calc(50% - min(var(--window-width), calc(100vw - 32px)) / 2); }
-.panel-intro { margin-bottom: 16px; color: var(--muted); font-size: 12px; }
 .indicator-picker { display: flex; flex-direction: column; gap: 7px; }
 .indicator-picker label { font-size: 13px; font-weight: 600; }
 select { max-width: 100%; padding: 9px 10px; border: 1px solid var(--control-line); border-radius: var(--radius); color: var(--ink); background: var(--surface-raised); font-size: 13px; }
@@ -77,11 +76,11 @@ select { max-width: 100%; padding: 9px 10px; border: 1px solid var(--control-lin
 .city-picker button { padding: 8px 2px; font-size: 12px; }
 .city-picker button[aria-pressed="true"] { background: var(--selection-soft); border-color: var(--selection); color: var(--selection); font-weight: 650; box-shadow: inset 0 -2px var(--selection); }
 .selection-summary { margin: 12px 0 16px; color: var(--muted); font-size: 12px; }
-.compare-selection { width: 100%; }
+.compare-selection { width: 100%; margin-top: 16px; }
+.selection-summary:not([hidden]) + .compare-selection { margin-top: 0; }
 .legend-list { list-style: none; padding: 0; margin: 14px 0 0; font-size: 12px; font-variant-numeric: tabular-nums; }
 .legend-list li { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
 .legend-swatch { flex: 0 0 22px; height: 12px; border-radius: 2px; border: 1px solid #a6c2d54d; }
-.legend-note { color: var(--muted); font-size: 12px; margin-top: 14px; }
 .timeline { padding: 14px 20px 16px; }
 .timeline-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 12px; }
 #current-year { font-family: "Bahnschrift", "Consolas", "Microsoft YaHei", sans-serif; font-size: 20px; color: var(--accent); font-weight: 650; font-variant-numeric: tabular-nums; }
@@ -95,7 +94,6 @@ select { max-width: 100%; padding: 9px 10px; border: 1px solid var(--control-lin
 .playback-options select { font-size: 11px; padding: 6px; }
 .loop-label { display: flex; align-items: center; gap: 4px; }
 .loop-label input { margin: 0; accent-color: var(--accent); }
-#timeline-note { margin-top: 10px; font-size: 12px; color: var(--muted); }
 .chart-choices { display: grid; gap: 10px; }
 .chart-choices button { padding: 12px 14px; text-align: left; }
 .chart-choices strong, .chart-choices span { display: block; }
@@ -106,9 +104,6 @@ select { max-width: 100%; padding: 9px 10px; border: 1px solid var(--control-lin
 .chart-canvas { flex: 1 0 260px; width: 100%; height: 330px; min-height: 260px; }
 .chart-message { padding: 48px 12px; font-size: 13px; text-align: center; color: var(--muted); }
 .chart-message button { display: block; margin: 12px auto 0; }
-.chart-note { color: var(--muted); font-size: 12px; margin: 14px 6px 2px; }
-.data-notes { color: var(--muted); font-size: 13px; }
-.data-notes p + p { margin-top: 12px; }
 .ol-zoom { top: auto !important; bottom: 280px; left: auto !important; right: 16px; background: var(--surface) !important; padding: 3px !important; border: 1px solid var(--line); border-radius: var(--radius) !important; }
 .ol-control button { background: var(--surface-raised) !important; color: var(--ink) !important; font-family: inherit; width: 32px !important; height: 32px !important; font-size: 20px !important; margin: 0 !important; }
 .ol-control button:hover { background: var(--surface-hover) !important; }
@@ -152,7 +147,6 @@ input[type="checkbox"] { accent-color: var(--accent); }
   .chart-canvas { height: 290px; flex-basis: 240px; min-height: 240px; }
   .city-picker button { min-height: 44px; }
   .ol-zoom { right: 12px; bottom: 300px; }
-  #timeline-note { display: none; }
 }
 @media (max-height: 600px) { .floating-window { max-height: calc(100dvh - 155px); } .placement-controls { top: 90px; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }

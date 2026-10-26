@@ -2,7 +2,7 @@ export function createTimeline({ target, store, player }) {
   target.innerHTML = `
     <div class="timeline-heading"><label for="year-slider">统计年份</label>
       <output id="current-year" for="year-slider"></output></div>
-    <input id="year-slider" type="range" min="0" step="1" aria-describedby="timeline-note">
+    <input id="year-slider" type="range" min="0" step="1">
     <div class="year-ticks" aria-hidden="true"></div>
     <div class="playback-controls">
       <div class="playback-buttons">
@@ -16,8 +16,7 @@ export function createTimeline({ target, store, player }) {
           <option value="1000">1 秒</option><option value="2000">2 秒</option></select>
         <label class="loop-label"><input id="play-loop" type="checkbox">循环播放</label>
       </div>
-    </div>
-    <p id="timeline-note">拖动滑块或手动选年会暂停播放；默认播放至末年停止。</p>`
+    </div>`
   const slider = target.querySelector('#year-slider')
   slider.max = String(store.years.length - 1)
   slider.disabled = store.years.length < 2
@@ -50,7 +49,7 @@ export function createTimeline({ target, store, player }) {
     const index = store.years.indexOf(year)
     slider.value = String(index)
     slider.setAttribute('aria-valuetext', `${year} 年`)
-    target.querySelector('#current-year').textContent = `${year} 年${year === 2025 ? ' · 初步数据' : ''}`
+    target.querySelector('#current-year').textContent = `${year} 年`
     target.querySelector('#previous-year').disabled = index === 0
     target.querySelector('#next-year').disabled = index === store.years.length - 1
     const playButton = target.querySelector('#play-toggle')
