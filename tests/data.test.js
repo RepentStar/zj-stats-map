@@ -4,6 +4,8 @@ import { readFile } from 'node:fs/promises'
 import { parseData, parseCsv, loadData } from '../src/data/loader.js'
 import { createStore } from '../src/data/store.js'
 import { formatValue } from '../src/data/indicators.js'
+import { createChartSnapshot } from '../src/charts/snapshot.js'
+import { createExploreOption } from '../src/charts/exploreOptions.js'
 
 const dataUrl = new URL('../public/data/', import.meta.url)
 const [regionsText, indicatorsText, statsText, geoText] = await Promise.all(
@@ -16,12 +18,13 @@ test('actual data preserves string codes and explicitly parses numerical fields'
   const data = parse()
   assert.equal(data.regions.length, 12)
   assert.equal(data.geojson.features.length, 11)
-  assert.equal(data.stats.length, 220)
+  assert.equal(data.stats.length, 990)
+  assert.equal(data.indicators.length, 9)
   assert.equal(data.regions[0].area_land, null)
   assert.equal(data.regions[1].adcode, '330100')
   assert.equal(data.regions[1].area_land, 16873.5)
   assert.equal(data.stats[0].year, 2016)
-  assert.equal(data.stats[0].value, 918.8)
+  assert.equal(data.stats.find((row) => row.adcode === '330100' && row.year === 2016 && row.indicator === 'pop_resident').value, 918.8)
   assert.equal(data.indicators[0].decimals, 1)
   assert.ok(data.geojson.features.every((feature) => typeof feature.properties.adcode === 'string'))
 })
@@ -32,6 +35,23 @@ test('numeric source GeoJSON codes are normalized without mutating the source', 
   const parsed = parse({ geojson })
   assert.equal(parsed.geojson.features[0].properties.adcode, '330100')
   assert.equal(geojson.features[0].properties.adcode, 330100)
+})
+
+test('new industry and income indicators feed rankings and trends with registered units', () => {
+  const store = createStore(parse())
+  for (const indicator of ['gdp_primary', 'gdp_secondary', 'gdp_tertiary', 'share_primary', 'share_secondary', 'share_tertiary', 'income_urban_pc']) {
+    store.setState({ indicator, year: 2025 })
+    const rank = createExploreOption(createChartSnapshot(store, 'rank'), 'rank')
+    assert.equal(rank.series[0].data.length, 11)
+    assert.ok(rank.series[0].data.every((row, index, rows) => index === 0 || rows[index - 1].value >= row.value))
+    const trend = createExploreOption(createChartSnapshot(store, 'line'), 'line')
+    assert.equal(trend.series.length, 11)
+    assert.equal(trend.yAxis.name, store.indicators.get(indicator).unit)
+    assert.ok(trend.series.every((series) => series.data.length === 10 && series.data.every(([, value]) => Number.isFinite(value))))
+  }
+  assert.equal(store.getValue('income_urban_pc', 2016, '330100'), 52185)
+  assert.equal(store.getValue('income_urban_pc', 2025, '330600'), 87605)
+  assert.equal(store.getValue('share_tertiary', 2016, '330100'), 61.25)
 })
 
 test('CSV parsing accepts BOM and quoted metadata but rejects a wrong schema', () => {
@@ -115,7 +135,7 @@ test('HTTP loader uses the supplied base path and loads each asset once', async 
     assert.equal(options.signal, controller.signal)
     return new Response(responses.get(url.replace('/nested/data/', '')))
   })
-  assert.equal((await loadData({ baseUrl: '/nested/data/', signal: controller.signal })).stats.length, 220)
+  assert.equal((await loadData({ baseUrl: '/nested/data/', signal: controller.signal })).stats.length, 990)
   assert.equal(new Set(requests).size, 4)
   assert.ok(requests.every((url) => url.startsWith('/nested/data/')))
 })

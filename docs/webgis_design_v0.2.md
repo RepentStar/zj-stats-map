@@ -4,36 +4,38 @@
 
 > 界面修订(2026-10-26):地图铺满视口，控制面板、图例、时间轴和图表使用悬浮窗口；精简说明文案，保留操作标签与必要状态反馈。课设侧重可视化展示，省去数据口径提示和独立数据说明窗口。
 
+> 数据修订(2026-10-26):用户提供任务 3、4 数据后，接入产业结构与收入，共 9 项指标、990 条记录。沿用本文的长表、冻结指标名、预计算方案、Store 与现有交互；任务 2 和 M4 专用产业雷达图/堆叠图仍待办。来源及校验记录见 [数据接入记录](data_sources.md)。
+
 ## 1. 项目概述
 
 - **目标**:浙江省 11 个地级市的统计专题地图,支持指标切换、时间轴和图表联动。
 - **范围**:行政区划**仅到市级**(1 个省 + 11 个地级市),不做县区级下钻,不引入县级 GeoJSON 与县级数据。
 - **技术栈**:OpenLayers + Vite + ECharts。静态文件方案(GeoJSON + CSV),无后端。
-- **当前实现目标**:仅任务 1(常住人口、人口密度)。其余指标已在数据规范中预留,但不在当前开发范围内。
+- **当前实现范围**:任务 1 人口与密度、任务 3 产业结构数据及现有地图/排行/趋势、任务 4 收入。任务 2 及 M4 专用产业图表仍待办。
 
 ## 2. 任务状态
 
 | 任务 | 内容 | 指标 | 状态 |
 |---|---|---|---|
-| 1 | 人口与密度 | `pop_resident`、`area_land`、`pop_density` | ✅ 数据就绪,**当前开发目标** |
+| 1 | 人口与密度 | `pop_resident`、`area_land`、`pop_density` | ✅ 已接入 |
 | 2 | GDP 与人均 GDP | `gdp`、`gdp_per_capita` | 🕓 待办(待数据整理) |
-| 3 | 产业结构 | `gdp_primary/secondary/tertiary`、`share_*` | 🕓 待办(依赖任务 2) |
-| 4 | 收入 | `income_urban_pc` | 🕓 待办 |
+| 3 | 产业结构 | `gdp_primary/secondary/tertiary`、`share_*` | ✅ 数据及现有可视化已接入；M4 专用图表待办 |
+| 4 | 收入 | `income_urban_pc` | ✅ 已接入 |
 
 ```mermaid
 graph LR
-  T1[任务1 人口 ✅ 当前] --> T2[任务2 GDP 待办]
-  T2 --> T3[任务3 产业结构 待办]
-  T4[任务4 收入 待办]
+  T1[任务1 人口 已接入] --> T2[任务2 GDP 待办]
+  T3[任务3 产业数据 已接入] --> M4[产业雷达图和堆叠图 待办]
+  T4[任务4 收入 已接入]
 ```
 
-## 3. 数据现状(任务 1)
+## 3. 数据现状(任务 1、3、4)
 
 | 文件 | 状态 | 内容 |
 |---|---|---|
 | `regions.csv` | ✅ | 12 行:1 省 + 11 市,含 `area_land` 与中心点 |
-| `stats.csv` | ✅ 仅任务 1 | 11 市 × 2016–2025 × 2 指标 = 220 行 |
-| `indicators.csv` | ✅ 已建(任务 1 的 2 项) | 指标元数据 |
+| `stats.csv` | ✅ 任务 1、3、4 | 11 市 × 2016–2025 × 9 指标 = 990 行 |
+| `indicators.csv` | ✅ 已建(9 项) | 人口、产业结构、收入指标元数据 |
 | `geo/zhejiang_city.json` | ✅ 已规范化 | 浙江省 11 市边界 |
 
 数据特征:
@@ -41,6 +43,7 @@ graph LR
 - `pop_density = pop_resident × 10000 / area_land`,已抽查杭州、舟山 2016 年与文件一致。
 - 省级行(330000)无 `area_land`,`stats` 无省级数据。
 - 年份范围为 2016–2025。
+- `share_x = gdp_x / (gdp_primary + gdp_secondary + gdp_tertiary) × 100`，使用提交的预计算占比；任务 3 不依赖任务 2 的独立 GDP 数据。
 
 ## 4. 数据结构规范
 
@@ -50,9 +53,9 @@ graph LR
 public/data/
 ├─ geo/zhejiang_city.json
 ├─ regions.csv
-├─ stats.csv              # 当前仅含任务 1;后续任务合并进来
+├─ stats.csv              # 任务 1、3、4 统一长表
 ├─ indicators.csv
-└─ raw/stats_task1.csv    # 各任务原始提交文件
+└─ raw/                   # stats_task1.csv、stats_task3.csv、stats_task4.csv
 ```
 
 ### 4.2 `regions.csv`
@@ -80,6 +83,9 @@ public/data/
 | `pop_resident` | 常住人口 | 万人 | 原始 | stats.csv |
 | `pop_density` | 人口密度 | 人/km² | 派生(**预计算**) | stats.csv |
 | `area_land` | 行政区面积 | km² | 原始(静态) | regions.csv |
+| `gdp_primary` / `gdp_secondary` / `gdp_tertiary` | 一/二/三产业增加值 | 亿元 | 原始 | stats.csv |
+| `share_primary` / `share_secondary` / `share_tertiary` | 一/二/三产业占比 | % | 派生(**预计算**) | stats.csv |
+| `income_urban_pc` | 城镇居民人均可支配收入 | 元 | 原始 | stats.csv |
 
 待办(命名已冻结,暂不开发):
 
@@ -87,9 +93,6 @@ public/data/
 |---|---|---|---|---|
 | `gdp` | 地区生产总值 | 亿元 | 原始 | 2 |
 | `gdp_per_capita` | 人均 GDP | 元/人 | 派生/官方 | 2 |
-| `gdp_primary` / `gdp_secondary` / `gdp_tertiary` | 一/二/三产业增加值 | 亿元 | 原始 | 3 |
-| `share_primary` / `share_secondary` / `share_tertiary` | 一/二/三产业占比 | % | 派生 | 3 |
-| `income_urban_pc` | 城镇居民人均可支配收入 | 元 | 原始 | 4 |
 
 命名规则:前缀表示类别(`pop_`、`gdp_`、`share_`、`income_`),`_pc` 表示人均;指标名确定后不再更改。
 
@@ -98,6 +101,7 @@ public/data/
 - 前端**不计算**派生指标,只读取 `stats.csv` 中的预计算值。
 - 构建脚本做一致性校验:`|pop_density − pop_resident×10000/area_land| ≤ 0.1`,超限则报错。
 - 后续任务的派生指标(`gdp_per_capita`、`share_*`)沿用同一原则。
+- 当前产业占比的单项公式误差及三项合计偏离 100% 均允许 ≤ 0.01 个百分点；须有同一市年的全部三项增加值和占比，增加值合计须大于零。
 
 ### 4.6 `indicators.csv`(当前内容)
 
@@ -105,6 +109,13 @@ public/data/
 indicator,label,unit,decimals,category,type,formula,source,direction,note
 pop_resident,常住人口,万人,1,人口,raw,,统计年鉴,neutral,
 pop_density,人口密度,人/km²,1,人口,derived,pop_resident*10000/area_land,预计算,neutral,
+gdp_primary,第一产业增加值,亿元,2,产业结构,raw,,各市统计局年度初步核算数,neutral,详见 docs/data_sources.md
+gdp_secondary,第二产业增加值,亿元,2,产业结构,raw,,各市统计局年度初步核算数,neutral,详见 docs/data_sources.md
+gdp_tertiary,第三产业增加值,亿元,2,产业结构,raw,,各市统计局年度初步核算数,neutral,详见 docs/data_sources.md
+share_primary,第一产业占比,%,2,产业结构,derived,gdp_primary/(gdp_primary+gdp_secondary+gdp_tertiary)*100,预计算,neutral,以三次产业增加值之和为分母
+share_secondary,第二产业占比,%,2,产业结构,derived,gdp_secondary/(gdp_primary+gdp_secondary+gdp_tertiary)*100,预计算,neutral,以三次产业增加值之和为分母
+share_tertiary,第三产业占比,%,2,产业结构,derived,gdp_tertiary/(gdp_primary+gdp_secondary+gdp_tertiary)*100,预计算,neutral,以三次产业增加值之和为分母
+income_urban_pc,城镇居民人均可支配收入,元,0,收入,raw,,任务4提交文件（未附来源说明）,positive,原始城市名称按地区表映射为行政区编码
 ```
 
 ## 5. 系统设计
@@ -149,13 +160,14 @@ const getValue = (ind, year, code) =>
 
 ### 5.4 图表(ECharts)
 
-当前(任务 1)实现:
+当前(任务 1、3、4)实现:
 
 - **环形饼图**:各市常住人口构成，占比以本次城市范围内有效人口合计为分母；人口密度不可相加，不提供密度占比。
 - **横向条形排行图**:按生成时年份和指标降序排列城市数值，保留零值，缺失值不参与排名。
 - **折线图**:城市指标随年份变化,可多城市对比；生成时的当前年份用 `markLine` 标出，保留缺失断点。
+- 排行和趋势图支持全部 9 项已登记指标，按指标字典显示亿元、百分比或元等单位与精度。
 
-待办(任务 3 后):雷达图(三个 `share_*`)、堆叠图(三个 `gdp_*`)。
+待办(M4 专用图表):雷达图(三个 `share_*`)、堆叠图(三个 `gdp_*`)。本次接入仅复用现有图表类型。
 
 实现要点:
 
@@ -191,13 +203,13 @@ scripts/
 
 `merge_stats.py` 检查项(任一失败即中断):
 
-1. 列名固定为 `adcode,year,indicator,value`。
+1. 统一长表列名固定为 `adcode,year,indicator,value`。原始收入文件可为 `城市,year,indicator,value`，仅在合并入口按地区表全名/简称精确转换，未知城市报错；输出与 `--check` 严格使用编码长表。
 2. `adcode` 为 6 位字符串,存在于 `regions.csv` 与 GeoJSON。
 3. `(adcode, year, indicator)` 无重复。
-4. `value` 为数值,无空值/占位符。
+4. `value` 为有限非负数值,无空值/占位符；产业占比在 0 至 100 之间。
 5. `indicator` 已在 `indicators.csv` 登记。
 6. 派生指标与公式一致(见 4.5)。
-7. 输出覆盖率报告(当前应为:11 市 × 10 年 × 2 指标 = 220 行)。
+7. 输出覆盖率报告(当前应为:11 市 × 10 年 × 9 指标 = 990 行)，并报告人口密度及产业占比公式的校验条数。缺失行只报告、不补零；校验失败不覆盖输出。
 
 ## 7. 开发计划
 
@@ -207,8 +219,8 @@ scripts/
 | M1 | 市级底图 + 人口/人口密度分级设色 + 图例 + 指标切换 | ✅ 已完成 |
 | M2 | 时间轴(滑块 + 自动播放)、人口占比/城市排行/历年趋势、全屏地图悬浮窗口 | ✅ 已完成 |
 | M3 | GDP 与人均 GDP | 待办(任务 2) |
-| M4 | 产业结构雷达图、堆叠图 | 待办(任务 3) |
-| M5 | 收入指标 | 待办(任务 4) |
+| M4 | 产业结构雷达图、堆叠图 | 数据及现有地图/排行/趋势已接入，专用图表待办(任务 3) |
+| M5 | 收入指标 | ✅ 已完成(任务 4) |
 
 M0~M2 验收标准:
 
@@ -232,5 +244,5 @@ M2 实现说明:
 
 ## 8. 后续范围
 
-- 后续按任务扩展 GDP、产业结构和收入可视化。
+- 后续按任务扩展 GDP/人均 GDP 与产业雷达图、堆叠图。
 - 县区级下钻、县级 GeoJSON 与县级数据不在本版范围内。

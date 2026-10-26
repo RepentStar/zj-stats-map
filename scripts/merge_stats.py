@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Merge task CSVs and validate the task-one data contract (stdlib only)."""
+"""Merge task CSVs and validate population, industry and income (stdlib only)."""
 
 import argparse
 import csv
@@ -14,7 +14,13 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 STATS_COLUMNS = ['adcode', 'year', 'indicator', 'value']
 REGION_COLUMNS = ['adcode', 'name', 'short_name', 'level', 'parent', 'area_land', 'center_lng', 'center_lat']
 INDICATOR_COLUMNS = ['indicator', 'label', 'unit', 'decimals', 'category', 'type', 'formula', 'source', 'direction', 'note']
-ACTIVE_INDICATORS = {'pop_resident', 'pop_density'}
+SECTORS = ('primary', 'secondary', 'tertiary')
+GDP_TOTAL = '(gdp_primary+gdp_secondary+gdp_tertiary)'
+ACTIVE_INDICATORS = {
+    'pop_resident', 'pop_density', 'income_urban_pc',
+    *('gdp_' + sector for sector in SECTORS),
+    *('share_' + sector for sector in SECTORS),
+}
 
 
 def read_csv(path, columns):
@@ -40,6 +46,28 @@ def number(value, label):
     if not result.is_finite():
         raise ValueError(f'{label}: value must be finite')
     return result
+
+
+def read_stats(path, data_dir):
+    """Normalize supplied city names using the registered full/short city names."""
+    with path.open(encoding='utf-8-sig', newline='') as stream:
+        columns = next(csv.reader(stream), None)
+    if columns == STATS_COLUMNS:
+        return read_csv(path, STATS_COLUMNS)
+    rows = read_csv(path, ['城市', 'year', 'indicator', 'value'])
+    city_codes = {
+        name: row['adcode']
+        for row in read_csv(data_dir / 'regions.csv', REGION_COLUMNS)
+        if row['level'] == 'city'
+        for name in (row['name'], row['short_name'])
+    }
+    normalized = []
+    for row in rows:
+        name = row['城市']
+        if name not in city_codes:
+            raise ValueError(f'{path.name}: unknown city name: {name!r}')
+        normalized.append({'adcode': city_codes[name], **{key: row[key] for key in STATS_COLUMNS[1:]}})
+    return normalized
 
 
 def check_code(value):
@@ -79,9 +107,17 @@ def load_metadata(data_dir):
             raise ValueError(f'{key}: invalid indicator metadata')
         indicators[key] = row
     if set(indicators) != ACTIVE_INDICATORS:
-        raise ValueError('indicators.csv must register exactly the two task-one indicators')
+        raise ValueError('indicators.csv must register the nine population, industry and income indicators')
     if indicators['pop_resident']['type'] != 'raw' or indicators['pop_density']['type'] != 'derived' or indicators['pop_density']['formula'] != 'pop_resident*10000/area_land':
         raise ValueError('task-one indicator types or density formula do not match the design')
+    for sector in SECTORS:
+        if indicators['gdp_' + sector]['type'] != 'raw':
+            raise ValueError(f'gdp_{sector}: expected raw indicator')
+        share = indicators['share_' + sector]
+        if share['type'] != 'derived' or share['formula'] != f'gdp_{sector}/{GDP_TOTAL}*100':
+            raise ValueError(f'share_{sector}: invalid type or industry share formula')
+    if indicators['income_urban_pc']['type'] != 'raw':
+        raise ValueError('income_urban_pc: expected raw indicator')
 
     geojson = json.loads((data_dir / 'geo' / 'zhejiang_city.json').read_text(encoding='utf-8-sig'))
     if not isinstance(geojson, dict) or geojson.get('type') != 'FeatureCollection' or not isinstance(geojson.get('features'), list):
@@ -119,6 +155,10 @@ def validate(rows, data_dir):
         if key in index:
             raise ValueError(f'duplicate primary key: {key}')
         index[key] = number(row['value'], str(key))
+        if index[key] < 0:
+            raise ValueError(f'{key}: value must be nonnegative')
+        if indicator.startswith('share_') and index[key] > 100:
+            raise ValueError(f'{key}: industry share must be between 0 and 100')
         years.add(year)
     if not index:
         raise ValueError('no statistics to validate')
@@ -135,12 +175,31 @@ def validate(rows, data_dir):
             raise ValueError(f'{code}/{year}: density {value} differs from formula {expected:.4f} by more than 0.1')
         density_count += 1
 
+    shares_checked = 0
+    share_groups = {(code, year) for code, year, indicator in index if indicator.startswith('share_')}
+    for code, year in sorted(share_groups):
+        required = [prefix + sector for prefix in ('gdp_', 'share_') for sector in SECTORS]
+        if any((code, year, indicator) not in index for indicator in required):
+            raise ValueError(f'{code}/{year}: all three GDP values and shares required to validate industry shares')
+        total = sum(index[code, year, 'gdp_' + sector] for sector in SECTORS)
+        if total <= 0:
+            raise ValueError(f'{code}/{year}: industry GDP total must be positive')
+        shares = [index[code, year, 'share_' + sector] for sector in SECTORS]
+        for sector, share in zip(SECTORS, shares):
+            expected = index[code, year, 'gdp_' + sector] / total * 100
+            if abs(share - expected) > Decimal('0.01'):
+                raise ValueError(f'{code}/{year}/share_{sector}: differs from GDP formula by more than 0.01 percentage points')
+        if abs(sum(shares) - 100) > Decimal('0.01'):
+            raise ValueError(f'{code}/{year}: industry shares must sum to 100 within 0.01 percentage points')
+        shares_checked += 3
+
     expected_count = len(cities) * len(years) * len(indicators)
     counts = {indicator: sum(key[2] == indicator for key in index) for indicator in sorted(indicators)}
     return {
         'cities': len(cities), 'years': sorted(years), 'indicators': counts,
         'rows': len(index), 'expected': expected_count,
         'missing': expected_count - len(index), 'densities_checked': density_count,
+        'shares_checked': shares_checked,
     }
 
 
@@ -176,13 +235,14 @@ def main(argv=None):
             sources = args.input if args.input is not None else sorted((args.data_dir / 'raw').glob('*.csv'))
         if not sources:
             raise ValueError('no raw input CSV files found')
-        rows = [row for path in sources for row in read_csv(path, STATS_COLUMNS)]
+        rows = [row for path in sources for row in (read_csv(path, STATS_COLUMNS) if args.check else read_stats(path, args.data_dir))]
         report = validate(rows, args.data_dir)
         if not args.check:
             write_stats(rows, args.output or args.data_dir / 'stats.csv')
         print('Data validation passed')
         print(f'Coverage: {report["cities"]} cities x {len(report["years"])} years x {len(report["indicators"])} indicators = {report["rows"]}/{report["expected"]} rows ({report["rows"] / report["expected"]:.1%})')
         print(f'Years: {report["years"][0]}-{report["years"][-1]}; missing rows: {report["missing"]}; densities checked: {report["densities_checked"]}')
+        print(f'Industry shares checked: {report["shares_checked"]}')
         for indicator, count in report['indicators'].items():
             print(f'  {indicator}: {count} rows')
         return 0

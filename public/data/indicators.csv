@@ -1,3 +1,10 @@
 indicator,label,unit,decimals,category,type,formula,source,direction,note
 pop_resident,常住人口,万人,1,人口,raw,,统计年鉴,neutral,
 pop_density,人口密度,人/km²,1,人口,derived,pop_resident*10000/area_land,预计算,neutral,
+gdp_primary,第一产业增加值,亿元,2,产业结构,raw,,各市统计局年度初步核算数,neutral,详见 docs/data_sources.md
+gdp_secondary,第二产业增加值,亿元,2,产业结构,raw,,各市统计局年度初步核算数,neutral,详见 docs/data_sources.md
+gdp_tertiary,第三产业增加值,亿元,2,产业结构,raw,,各市统计局年度初步核算数,neutral,详见 docs/data_sources.md
+share_primary,第一产业占比,%,2,产业结构,derived,gdp_primary/(gdp_primary+gdp_secondary+gdp_tertiary)*100,预计算,neutral,以三次产业增加值之和为分母
+share_secondary,第二产业占比,%,2,产业结构,derived,gdp_secondary/(gdp_primary+gdp_secondary+gdp_tertiary)*100,预计算,neutral,以三次产业增加值之和为分母
+share_tertiary,第三产业占比,%,2,产业结构,derived,gdp_tertiary/(gdp_primary+gdp_secondary+gdp_tertiary)*100,预计算,neutral,以三次产业增加值之和为分母
+income_urban_pc,城镇居民人均可支配收入,元,0,收入,raw,,任务4提交文件（未附来源说明）,positive,原始城市名称按地区表映射为行政区编码
