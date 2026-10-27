@@ -5,6 +5,7 @@ import { loadChartType } from '../src/charts/explore.js'
 import { createChartSnapshot } from '../src/charts/snapshot.js'
 import { createExploreOption } from '../src/charts/exploreOptions.js'
 import { createStore } from '../src/data/store.js'
+import { PALETTE } from '../src/map/breaks.js'
 
 await Promise.all(['pie', 'rank', 'line'].map(loadChartType))
 
@@ -53,15 +54,17 @@ test('population pie uses additive population even when map shows density, omitt
   assert.equal(createExploreOption(createChartSnapshot(store, 'pie'), 'pie').series[0].data.length, 1)
 })
 
-test('rank sorts actual values, retains zero, omits missing values and keeps city colors stable', () => {
+test('rank sorts actual values, retains zero, omits missing values and colors bars like the map', () => {
   const store = fixture()
   const population = createExploreOption(createChartSnapshot(store, 'rank'), 'rank')
   assert.deepEqual(population.yAxis.data, ['宁波', '杭州'])
-  const color = population.series[0].data.find((row) => row.adcode === '330200').itemStyle.color
+  assert.ok(population.series[0].data.every((row) => row.itemStyle.color === PALETTE[3]))
   store.setState({ indicator: 'pop_density' })
   const density = createExploreOption(createChartSnapshot(store, 'rank'), 'rank')
   assert.deepEqual(density.series[0].data.map((row) => row.value), [200, 0])
-  assert.equal(density.series[0].data[1].itemStyle.color, color)
+  const [high, low] = density.series[0].data.map((row) => row.itemStyle.color)
+  assert.ok(PALETTE.includes(high) && PALETTE.includes(low))
+  assert.notEqual(high, low)
 })
 
 test('empty selections of available observations show an explicit empty state instead of false zeros', () => {

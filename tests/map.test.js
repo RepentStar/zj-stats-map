@@ -2,7 +2,9 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import GeoJSON from 'ol/format/GeoJSON.js'
-import { createClassification, createClassifications } from '../src/map/breaks.js'
+import { createClassification, createClassifications, PALETTE } from '../src/map/breaks.js'
+import { formatCompact } from '../src/data/indicators.js'
+import { bubbleSize, BUBBLE_MAX_SIZE } from '../src/map/symbols.js'
 import { createCityStyle, NO_DATA_COLOR } from '../src/map/style.js'
 import { toggleCity } from '../src/map/layers.js'
 import { parseData } from '../src/data/loader.js'
@@ -56,10 +58,11 @@ test('classifications include every year and remain fixed when shared state chan
   assert.deepEqual([...classifications].map(([key, value]) => [key, value.breaks]), initial)
 })
 
-test('real boundaries use the matching color, selection outline, city label, and missing-data fill', () => {
+test('rate indicators use the matching class color, name/value label, selection outline, and missing-data fill', () => {
   const data = { ...fixture, stats: fixture.stats.filter((row) =>
-    !(row.adcode === '330100' && row.year === 2016 && row.indicator === 'pop_resident')) }
+    !(row.adcode === '330100' && row.year === 2016 && row.indicator === 'pop_density')) }
   const store = createStore(data)
+  store.setState({ indicator: 'pop_density' })
   const classifications = createClassifications(store)
   const style = createCityStyle(store, classifications)
   const features = new GeoJSON().readFeatures(store.geojson, { featureProjection: 'EPSG:3857' })
@@ -68,17 +71,41 @@ test('real boundaries use the matching color, selection outline, city label, and
     assert.ok(style(feature)[1].getGeometry().getCoordinates().every(Number.isFinite))
   }
   const [normal, label] = style(city)
-  const population = classifications.get('pop_resident')
-  assert.equal(normal.getFill().getColor(), population.colors[population.classify(store.getValue('pop_resident', 2025, '330100'))])
-  assert.equal(label.getText().getText(), '杭州')
+  const density = classifications.get('pop_density')
+  const value = store.getValue('pop_density', 2025, '330100')
+  assert.equal(normal.getFill().getColor(), density.colors[density.classify(value)])
+  const text = label.getText().getText()
+  assert.equal(text[0], '杭州')
+  assert.equal(text[4], formatCompact(value, store.indicators.get('pop_density')))
   toggleCity(store, '330100')
   assert.equal(style(city)[0].getStroke().getWidth(), 3)
-  store.setState({ indicator: 'pop_density' })
-  const density = classifications.get('pop_density')
-  assert.equal(style(city)[0].getFill().getColor(), density.colors[density.classify(store.getValue('pop_density', 2025, '330100'))])
-  store.setState({ indicator: 'pop_resident', year: 2016 })
+  store.setState({ year: 2016 })
   assert.equal(style(city)[0].getFill().getColor(), NO_DATA_COLOR)
   assert.equal(style(city)[0].getStroke().getWidth(), 3)
+})
+
+test('count indicators leave values to proportional symbols and share indicators to industry pies', () => {
+  const store = createStore(fixture)
+  const classifications = createClassifications(store)
+  const style = createCityStyle(store, classifications)
+  const city = new GeoJSON().readFeatures(store.geojson, { featureProjection: 'EPSG:3857' })
+    .find((feature) => feature.get('adcode') === '330100')
+  assert.equal(style(city).length, 1)
+  assert.equal(style(city)[0].getFill().getColor(), PALETTE[0])
+  store.setState({ indicator: 'gdp' })
+  assert.equal(style(city).length, 1)
+  assert.equal(style(city)[0].getFill().getColor(), PALETTE[0])
+  assert.ok(bubbleSize(store.getValue('gdp', 2025, '330100'), classifications.get('gdp').max) > 0)
+  store.setState({ indicator: 'gdp_per_capita' })
+  const perCapita = classifications.get('gdp_per_capita')
+  assert.equal(style(city)[0].getFill().getColor(), perCapita.colors[perCapita.classify(store.getValue('gdp_per_capita', 2025, '330100'))])
+  store.setState({ indicator: 'share_tertiary' })
+  assert.equal(style(city).length, 1)
+  assert.equal(style(city)[0].getFill().getColor(), PALETTE[0])
+  // 所有指标共用同一色阶
+  for (const classification of classifications.values()) assert.ok(classification.colors.every((color) => PALETTE.includes(color)))
+  assert.ok(bubbleSize(store.getValue('pop_resident', 2025, '330100'), classifications.get('pop_resident').max) <= BUBBLE_MAX_SIZE)
+  assert.equal(bubbleSize(null, 100), 0)
 })
 
 test('city toggling supports multiple selections and deselection without changing indicator or year', () => {

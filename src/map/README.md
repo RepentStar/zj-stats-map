@@ -4,7 +4,7 @@
 - `breaks.js`：按指标在所有年份的数据计算固定分级断点。
 - `style.js`：分级设色、无数据灰色样式与选中城市高亮。
 
-M1 已实现。`createClassifications(store)` 为每个指标汇总全部年份，计算五级最近秩分位数；重复断点去重，断点值归入较低一级。地图与图例共用同一组分级结果，缺失值为灰色。边界从 EPSG:4326 投影到 EPSG:3857。
+M1 已实现。`createClassifications(store)` 为每个指标汇总全部年份，计算五级最近秩分位数；重复断点去重，断点值归入较低一级。地图、图例与城市排行共用同一组分级结果，缺失值为灰色；全部指标共用一套蓝色色阶（`PALETTE`），选中城市用橙色强调。总量指标与产业占比不做分级设色，改由 `overlay.js` 绘制比例符号或饼图，尺寸规则见 `symbols.js`。边界从 EPSG:4326 投影到 EPSG:3857。
 
 `createCityMap({ target, store, classifications })` 返回 `resetView()` 与 `destroy()`；后者取消 Store 订阅、尺寸观察并释放地图。`toggleCity(store, adcode)` 供地图点击、控制面板城市按钮和图表点击共用。
 

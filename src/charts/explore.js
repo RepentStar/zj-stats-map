@@ -1,10 +1,10 @@
 import { init, use } from 'echarts/core'
-import { AriaComponent, LegendComponent, TitleComponent, TooltipComponent } from 'echarts/components'
+import { AriaComponent, GraphicComponent, LegendComponent, TitleComponent, TooltipComponent } from 'echarts/components'
 import { SVGRenderer } from 'echarts/renderers'
 import { LabelLayout } from 'echarts/features'
 import { createExploreOption } from './exploreOptions.js'
 
-use([AriaComponent, LegendComponent, TitleComponent, TooltipComponent, LabelLayout, SVGRenderer])
+use([AriaComponent, GraphicComponent, LegendComponent, TitleComponent, TooltipComponent, LabelLayout, SVGRenderer])
 
 export { loadChartType } from './loadType.js'
 

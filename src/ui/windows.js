@@ -44,8 +44,10 @@ export function createWindowManager({ target, fallbackFocus }) {
     heading.setAttribute('aria-describedby', 'window-help')
     const closeButton = document.createElement('button')
     closeButton.type = 'button'
-    closeButton.className = 'window-close'
-    closeButton.textContent = '×'
+    closeButton.className = 'btn'
+    closeButton.dataset.variant = 'ghost'
+    closeButton.dataset.size = 'icon-sm'
+    closeButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>'
     closeButton.setAttribute('aria-label', `关闭${title}`)
     const body = document.createElement('div')
     body.className = 'window-body'

@@ -48,18 +48,26 @@ test('industry charts freeze their year and cities without using or changing the
   assert.deepEqual(next.series.map((series) => series.data[0].value), [10, 510, 510])
 })
 
-test('radar reads precomputed shares unchanged, fixes axes to 0-100 and keeps city colors stable', () => {
+test('radar reads precomputed shares unchanged, fits axes across all years and keeps city colors stable', () => {
   const store = fixture()
   const radar = createExploreOption(createChartSnapshot(store, 'radar'), 'radar')
   assert.deepEqual(radar.series[0].data[0].value, [0, 19.99, 80.01])
-  assert.ok(radar.radar.indicator.every(({ min, max }) => min === 0 && max === 100))
+  // 小多图：每市一个雷达，共用同一组跨年份固定坐标
+  assert.equal(radar.radar.length, radar.series.length)
+  assert.deepEqual(radar.series.map(({ radarIndex }) => radarIndex), radar.series.map((_, index) => index))
+  for (const { indicator } of radar.radar) {
+    assert.deepEqual(indicator.map(({ min, max }) => [min, max]), [[0, 5], [15, 50], [50, 85]])
+  }
+  assert.match(radar.graphic.at(-1).style.text, /第一产业 0–5%　第二产业 15–50%　第三产业 50–85%/)
+  assert.deepEqual(radar.graphic.slice(0, -1).map(({ style }) => style.text), ['杭州', '宁波'])
+  store.setState({ year: 2016 })
+  assert.deepEqual(createExploreOption(createChartSnapshot(store, 'radar'), 'radar').radar[0].indicator, radar.radar[0].indicator)
   const color = radar.series[1].itemStyle.color
   const symbol = radar.series[1].symbol
   store.setState({ year: 2016, selectedCities: ['330200'] })
   const single = createExploreOption(createChartSnapshot(store, 'radar'), 'radar')
   assert.equal(single.series[0].itemStyle.color, color)
   assert.equal(single.series[0].symbol, symbol)
-  assert.equal(single.legend.selectedMode, true)
   assert.match(radar.tooltip.formatter({ data: radar.series[0].data[0] }), /第二产业：19.99 %/)
 })
 
