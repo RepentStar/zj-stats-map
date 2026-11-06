@@ -6,7 +6,6 @@ export function createIndicatorPicker({ target, store }) {
   const select = document.createElement('select')
   select.id = 'indicator-select'
   select.className = 'select'
-  // 按主题分组，便于在人口、产业结构、收入之间切换
   const groups = new Map()
   for (const metadata of store.indicators.values()) {
     const category = metadata.category || '其他'

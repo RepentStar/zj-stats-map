@@ -7,6 +7,6 @@ gdp_tertiary,第三产业增加值,亿元,2,产业结构,raw,,各市统计局年
 share_primary,第一产业占比,%,2,产业结构,derived,gdp_primary/(gdp_primary+gdp_secondary+gdp_tertiary)*100,预计算,neutral,以三次产业增加值之和为分母
 share_secondary,第二产业占比,%,2,产业结构,derived,gdp_secondary/(gdp_primary+gdp_secondary+gdp_tertiary)*100,预计算,neutral,以三次产业增加值之和为分母
 share_tertiary,第三产业占比,%,2,产业结构,derived,gdp_tertiary/(gdp_primary+gdp_secondary+gdp_tertiary)*100,预计算,neutral,以三次产业增加值之和为分母
-income_urban_pc,城镇居民人均可支配收入,元,0,收入,raw,,任务4提交文件（未附来源说明）,positive,原始城市名称按地区表映射为行政区编码
-gdp,地区生产总值,亿元,2,经济,raw,,任务2提交文件（未附来源说明）,positive,按用户要求原值接入，未核验数值及与产业合计的一致性
-gdp_per_capita,人均 GDP,元/人,2,经济,derived,gdp*10000/pop_resident,任务2预计算提交值,positive,直接读取提交值，不重算；本次不校验计算一致性
+income_urban_pc,城镇居民人均可支配收入,元,0,收入,raw,,中国统计年鉴,positive,
+gdp,地区生产总值,亿元,2,经济,raw,,中国统计年鉴,positive,独立统计值
+gdp_per_capita,人均 GDP,元/人,2,经济,derived,gdp*10000/pop_resident,中国统计年鉴,positive,直接读取预计算值

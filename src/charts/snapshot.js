@@ -1,4 +1,4 @@
-/** Capture controls without changing global state or subscribing the chart to it. */
+/** 固定图表条件，不订阅共享状态 */
 export function createChartSnapshot(store, type) {
   const current = store.getState()
   const selectedCities = current.selectedCities.length
@@ -6,14 +6,14 @@ export function createChartSnapshot(store, type) {
     : [...store.regions.values()].filter((region) => region.level === 'city').map((region) => region.adcode)
   const state = Object.freeze({
     ...current,
-    // Density is not additive. The composition chart always uses population.
+    // 人口占比和产业图表使用固定指标
     indicator: ({ pie: 'pop_resident', radar: 'share_primary', stack: 'gdp_primary' })[type] ?? current.indicator,
     selectedCities: Object.freeze(selectedCities),
   })
   return { ...store, getState: () => state }
 }
 
-/** Keep each chart's metric while following the shared timeline and city selection. */
+/** 保留图表指标，跟随共享年份与城市选择 */
 export function createTimelineChartSource(store, type) {
   const snapshot = createChartSnapshot(store, type)
   const allCities = Object.freeze([...store.regions.values()]

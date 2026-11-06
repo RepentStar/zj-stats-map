@@ -18,7 +18,7 @@ export function createExploreChart({ target, snapshot, type, onSelectCity, onSel
     if (legend && option.legend) {
       option.legend = { ...option.legend, selected: legend.selected, scrollDataIndex: legend.scrollDataIndex }
     }
-    // Replace options so a new year cannot retain missing cities or an old empty title.
+    // 替换配置，清除过期城市与空状态
     chart.setOption(option, { notMerge: true })
   }
   try {

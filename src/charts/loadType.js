@@ -6,7 +6,6 @@ const loaders = {
   radar: () => import('./types/radar.js'),
 }
 
-// Windows share the module cache; ECharts use() also makes registration idempotent.
 export async function loadChartType(type) {
   const load = loaders[type]
   if (!Object.hasOwn(loaders, type)) throw new Error(`未知图表类型：${type}`)

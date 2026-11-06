@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Merge task CSVs and validate population, industry and income (stdlib only)."""
+"""Validate statistical CSVs and write normalized data using only the standard library."""
 
 import argparse
 import csv
@@ -49,7 +49,7 @@ def number(value, label):
 
 
 def read_stats(path, data_dir):
-    """Normalize supplied city names using the registered full/short city names."""
+    """Resolve full or short city names to registered codes."""
     with path.open(encoding='utf-8-sig', newline='') as stream:
         columns = next(csv.reader(stream), None)
     if columns == STATS_COLUMNS:
@@ -109,7 +109,7 @@ def load_metadata(data_dir):
     if set(indicators) != ACTIVE_INDICATORS:
         raise ValueError('indicators.csv must register the eleven population, GDP, industry and income indicators')
     if indicators['pop_resident']['type'] != 'raw' or indicators['pop_density']['type'] != 'derived' or indicators['pop_density']['formula'] != 'pop_resident*10000/area_land':
-        raise ValueError('task-one indicator types or density formula do not match the design')
+        raise ValueError('invalid population indicator types or density formula')
     for sector in SECTORS:
         if indicators['gdp_' + sector]['type'] != 'raw':
             raise ValueError(f'gdp_{sector}: expected raw indicator')
@@ -204,7 +204,7 @@ def validate(rows, data_dir):
 
 
 def write_stats(rows, output):
-    """Replace the output only after all inputs pass validation."""
+    """Atomically replace the output CSV."""
     output.parent.mkdir(parents=True, exist_ok=True)
     temporary = None
     try:

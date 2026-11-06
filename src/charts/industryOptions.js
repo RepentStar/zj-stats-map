@@ -6,11 +6,7 @@ const SECTOR_NAMES = ['第一产业', '第二产业', '第三产业']
 const SHORT_NAMES = ['一产', '二产', '三产']
 const RADAR_COLOR = '#2f74bd'
 
-/**
- * 雷达各轴按全部年份、全部城市的实际占比取整到 5% 作为固定范围。
- * 三项占比量级差异大（第一产业不足 12%），统一 0–100% 会让各市挤成一团；
- * 范围跨年份固定，播放时形状变化仍可比较，轴名标出范围以免误读。
- */
+/** 各轴按全部城市、年份的占比取整到 5%，保持跨年份固定 */
 export function shareAxisRanges(snapshot) {
   return SECTORS.map((sector) => {
     const values = [...(snapshot.stats.get(`share_${sector}`)?.values() ?? [])]
@@ -22,7 +18,7 @@ export function shareAxisRanges(snapshot) {
   })
 }
 
-/** Read complete sector triplets only. Missing sectors must never look like zero. */
+/** 只展示完整的三项产业数据，缺失值不补零 */
 export function createIndustryOption(snapshot, type) {
   const { year, selectedCities } = snapshot.getState()
   const isRadar = type === 'radar'
@@ -41,7 +37,7 @@ export function createIndustryOption(snapshot, type) {
   const base = {
     animation: false,
     textStyle: { fontFamily: '"Microsoft YaHei", sans-serif', color: '#526e65' },
-    aria: { enabled: true, label: { description: `${year} 年三次产业${isRadar ? '占比' : '增加值'}，单位${unit}。${missingCount ? `${missingCount} 市缺少完整三项数据，未展示。` : ''}` } },
+    aria: { enabled: true, label: { description: `${year} 年三次产业${isRadar ? '占比' : '增加值'}，单位${unit}${missingCount ? `${missingCount} 市缺少完整三项数据，未展示` : ''}` } },
     legend: { type: 'scroll', bottom: 4, left: 12, right: 12, selectedMode: isRadar,
       itemWidth: 12, itemHeight: 9 },
     tooltip: { trigger: 'item', renderMode: 'richText', confine: true,
@@ -62,7 +58,6 @@ export function createIndustryOption(snapshot, type) {
     textStyle: { fontSize: 12, color: '#526e65', fontWeight: 'normal' },
   }
   if (isRadar) {
-    // 小多图：每市一个小雷达，共用跨年份固定的坐标范围，避免多城市叠在一起
     const ranges = shareAxisRanges(snapshot)
     const top = missingCount ? 10 : 2
     const caption = 9
@@ -70,7 +65,7 @@ export function createIndustryOption(snapshot, type) {
     const lines = Math.ceil(rows.length / cols)
     const cellWidth = 100 / cols
     const cellHeight = (100 - top - caption) / lines
-    // 半径以画布较短边（高度）的一半为基准；雷达窗口宽高比约 1.3
+    // 百分比半径以画布短边的一半为基准，按窗口宽高比 1.3 估算
     const radius = `${0.66 * Math.min(cellWidth * 1.3, cellHeight)}%`
     const cell = (index) => ({ col: index % cols, line: Math.floor(index / cols) })
     return {

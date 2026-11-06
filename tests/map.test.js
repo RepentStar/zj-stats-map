@@ -1,20 +1,13 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
 import GeoJSON from 'ol/format/GeoJSON.js'
 import { createClassification, createClassifications, PALETTE } from '../src/map/breaks.js'
 import { formatCompact } from '../src/data/indicators.js'
 import { bubbleSize, BUBBLE_MAX_SIZE } from '../src/map/symbols.js'
 import { createCityStyle, NO_DATA_COLOR } from '../src/map/style.js'
 import { toggleCity } from '../src/map/layers.js'
-import { parseData } from '../src/data/loader.js'
+import { actualData as fixture } from './helpers/data.js'
 import { createStore } from '../src/data/store.js'
-
-const [regionsText, indicatorsText, statsText, geoText] = await Promise.all(
-  ['regions.csv', 'indicators.csv', 'stats.csv', 'geo/zhejiang_city.json']
-    .map((path) => readFile(new URL(`../public/data/${path}`, import.meta.url), 'utf8')),
-)
-const fixture = parseData({ regionsText, indicatorsText, statsText, geojson: JSON.parse(geoText) })
 
 test('quantile thresholds use observed values with inclusive upper bounds', () => {
   const classification = createClassification([10, 9, 8, 7, 6, 5, 4, 3, 2, 1])
@@ -102,7 +95,6 @@ test('count indicators leave values to proportional symbols and share indicators
   store.setState({ indicator: 'share_tertiary' })
   assert.equal(style(city).length, 1)
   assert.equal(style(city)[0].getFill().getColor(), PALETTE[0])
-  // 所有指标共用同一色阶
   for (const classification of classifications.values()) assert.ok(classification.colors.every((color) => PALETTE.includes(color)))
   assert.ok(bubbleSize(store.getValue('pop_resident', 2025, '330100'), classifications.get('pop_resident').max) <= BUBBLE_MAX_SIZE)
   assert.equal(bubbleSize(null, 100), 0)

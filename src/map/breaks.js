@@ -1,7 +1,6 @@
-/** 全部指标共用一套蓝色顺序色阶，地图只保留这一种色相（选中城市用橙色强调）。 */
 export const PALETTE = Object.freeze(['#e3eef9', '#b3d0ee', '#6fa6dc', '#2f74bd', '#0f4580'])
 
-/** Nearest-rank quantiles: thresholds are observed values, shared by all years. */
+/** 最近秩分位数以观测值为断点，等于断点时归入较低一级 */
 export function createClassification(values, classCount = 5, palette = PALETTE) {
   if (!Number.isInteger(classCount) || classCount < 1 || classCount > 5) {
     throw new Error('分级数量必须为 1–5 的整数')

@@ -13,7 +13,6 @@ h1, h2, h3, p { margin: 0; }
 
 .map-workspace, #map { position: fixed; inset: 0; width: 100%; height: 100dvh; }
 #map { background: #f4f5f7; }
-/* 底图降饱和、提亮，退到专题图层之后 */
 .basemap-layer { filter: grayscale(0.85) brightness(1.06) contrast(0.9); }
 #map:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
 
@@ -47,7 +46,6 @@ h1, h2, h3, p { margin: 0; }
 .selection-summary { margin: 12px 0 0; color: var(--muted-foreground); font-size: 12px; }
 .compare-selection { width: 100%; margin-top: 16px; }
 
-/* 停靠图例卡片：大号年份随时间轴播放跳动 */
 .map-key { position: fixed; z-index: 5; left: 16px; bottom: 16px; width: 272px; padding: 14px 16px 14px; background: color-mix(in oklab, var(--card) 92%, transparent); backdrop-filter: blur(8px); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: 0 10px 30px #0000001a; pointer-events: auto; }
 .map-key:empty { display: none; }
 .map-key-year { font-size: 44px; line-height: 1; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--foreground); }

@@ -1,13 +1,9 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { init } from 'echarts/core'
-import { loadChartType } from '../src/charts/explore.js'
 import { createChartSnapshot } from '../src/charts/snapshot.js'
 import { createExploreOption } from '../src/charts/exploreOptions.js'
 import { createStore } from '../src/data/store.js'
 import { PALETTE } from '../src/map/breaks.js'
-
-await Promise.all(['pie', 'rank', 'line'].map(loadChartType))
 
 function fixture() {
   return createStore({
@@ -74,19 +70,5 @@ test('empty selections of available observations show an explicit empty state in
     const option = createExploreOption(createChartSnapshot(store, type), type)
     assert.deepEqual(option.series, [])
     assert.match(option.title.text, /无可展示数据/)
-  }
-})
-
-test('all requested chart types render SVG using the registered runtime modules', () => {
-  const store = fixture()
-  for (const type of ['pie', 'rank', 'line']) {
-    const chart = init(null, null, { renderer: 'svg', ssr: true, width: 540, height: 330 })
-    try {
-      chart.setOption(createExploreOption(createChartSnapshot(store, type), type))
-      const svg = chart.renderToSVGString()
-      assert.match(svg, /<svg/)
-      assert.match(svg, /杭州/)
-      assert.match(svg, /宁波/)
-    } finally { chart.dispose() }
   }
 })

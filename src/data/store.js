@@ -1,4 +1,3 @@
-/** Shared data and selection state for OpenLayers, ECharts, and UI modules. */
 export function createStore(data) {
   const regions = new Map(data.regions.map((region) => [region.adcode, region]))
   const indicators = new Map(data.indicators.map((indicator) => [indicator.indicator, indicator]))

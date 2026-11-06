@@ -1,13 +1,18 @@
-# 地图模块（M1）
+# 地图模块
 
-- `layers.js`：OpenLayers 市级面图层。使用 Store 中的 GeoJSON，仅初始化时读取一次。
-- `breaks.js`：按指标在所有年份的数据计算固定分级断点。
-- `style.js`：分级设色、无数据灰色样式与选中城市高亮。
+| 文件          | 职责                                    |
+| ------------- | --------------------------------------- |
+| `tianditu.js` | 天地图 Web 墨卡托矢量底图               |
+| `layers.js`   | 市级边界、省外遮罩、地图点击与视图管理  |
+| `breaks.js`   | 跨年份固定的最近秩分位数分级            |
+| `style.js`    | 分级设色、城市标注、缺失值与选择样式    |
+| `overlay.js`  | 随地图平移缩放的 ECharts 气泡与产业饼图 |
+| `symbols.js`  | 叠加层和图例共用的符号尺寸规则          |
 
-M1 已实现。`createClassifications(store)` 为每个指标汇总全部年份，计算五级最近秩分位数；重复断点去重，断点值归入较低一级。地图、图例与城市排行共用同一组分级结果，缺失值为灰色；全部指标共用一套蓝色色阶（`PALETTE`），选中城市用橙色强调。总量指标与产业占比不做分级设色，改由 `overlay.js` 绘制比例符号或饼图，尺寸规则见 `symbols.js`。边界从 EPSG:4326 投影到 EPSG:3857。
+`createCityMap({ target, store, classifications, onHover })` 返回 `map`、`resetView()` 和 `destroy()`。市级边界仅初始化时从 EPSG:4326 投影到 EPSG:3857；状态变化调用 `layer.changed()`。销毁时取消订阅、尺寸观察并释放地图
 
-`createCityMap({ target, store, classifications })` 返回 `resetView()` 与 `destroy()`；后者取消 Store 订阅、尺寸观察并释放地图。`toggleCity(store, adcode)` 供地图点击、控制面板城市按钮和图表点击共用。
+`createClassifications(store)` 汇总各指标全部年份的数据，生成五级分位数断点；重复断点去重，等于断点的值归入较低一级。地图、图例与城市排行共用蓝色色阶，选中城市使用橙色边界
 
-地图容器覆盖整个视口，悬浮窗口不参与地图布局；关闭控件或图表不缩小地图。窗口之间的空白区域可直接操作地图，工具栏提供返回全省和重新打开控件的入口。
+总量指标由气泡面积表达；比率与人均指标采用分级设色和城市数值标注，缺失值为灰色。产业饼图按三次产业增加值绘制扇区，突出当前产业，标签读取预计算占比；饼图面积表示三次产业增加值合计。符号比例尺跨年份固定，窄屏按比例缩小
 
-从 Store 读取 `indicator`、`year`、`selectedCities`。状态更新时调用 `layer.changed()`，不重新获取边界；点击要素时调用 `store.setState({ selectedCities })`。仅市级，不做县区下钻。
+`toggleCity(store, adcode)` 供地图、控制面板和图表共用。悬浮窗口独立于地图布局，工具栏可恢复全省视图

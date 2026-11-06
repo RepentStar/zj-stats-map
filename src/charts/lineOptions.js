@@ -9,7 +9,7 @@ export function createLineOption(store) {
   return {
     animation: false,
     textStyle: { fontFamily: '"Microsoft YaHei", sans-serif', color: '#526e65' },
-    aria: { enabled: true, label: { description: `${metadata.label}历年变化，当前年份 ${year} 年。` } },
+    aria: { enabled: true, label: { description: `${metadata.label}历年变化，当前年份 ${year} 年` } },
     legend: { type: 'scroll', top: 4, left: 12, right: 12, selectedMode: false },
     grid: { left: 12, right: 28, top: 90, bottom: 42,
       outerBoundsMode: 'same', outerBoundsContain: 'axisLabel' },
@@ -42,7 +42,7 @@ export function createLineOption(store) {
       connectNulls: false, smooth: false, symbolSize: 7,
       itemStyle: { color: CITY_COLORS[cities.findIndex((city) => city.adcode === adcode) % CITY_COLORS.length] },
       lineStyle: { width: 2 }, emphasis: { focus: 'series' },
-      // Draw annotations once so multi-city comparisons have one current-year marker.
+      // 多城市共用一条当前年份标记
       ...(index === 0 ? {
         markLine: {
           silent: true, symbol: ['none', 'none'],

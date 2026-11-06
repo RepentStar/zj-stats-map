@@ -6,10 +6,7 @@ import { formatCompact, isCountIndicator, isShareIndicator } from '../data/indic
 
 export const NO_DATA_COLOR = '#d9dfe2'
 
-/**
- * 比率类指标：分级设色 + “城市名/数值”两行标注。
- * 总量类指标与产业占比：面填色阶最浅档作底，数值改由 overlay.js 的气泡或饼图表达，此处不标注。
- */
+/** 比率指标分级设色；气泡和饼图指标由叠加层负责数值标注 */
 export function createCityStyle(store, classifications) {
   const cache = new Map()
   return (feature) => {
@@ -36,7 +33,6 @@ export function createCityStyle(store, classifications) {
         zIndex: selected ? 2 : 0,
       })]
       if (!symbolized) {
-        // 深色分级上用白字，浅色分级上用深字，保证对比度
         const dark = index >= Math.ceil(classification.colors.length / 2)
         styles.push(new Style({
           geometry: polygon.getInteriorPoint(),

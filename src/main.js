@@ -18,7 +18,7 @@ import { loadChartType } from './charts/loadType.js'
 const app = document.querySelector('#app')
 app.innerHTML = `
   <main class="map-workspace" aria-label="浙江省统计专题地图工作台">
-    <div id="map" tabindex="0" role="region" aria-label="浙江省市级专题地图，方向键平移，加减键缩放。城市也可在控制面板中选择。"></div>
+    <div id="map" tabindex="0" role="region" aria-label="浙江省市级专题地图，方向键平移，加减键缩放，城市也可在控制面板中选择"></div>
     <nav class="workspace-tools" aria-label="地图工作台工具">
       <h1>浙江统计地图</h1>
       <div class="tool-buttons">
@@ -31,7 +31,7 @@ app.innerHTML = `
     </nav>
     <aside id="map-key" aria-label="地图图例"></aside>
     <div id="windows" class="window-layer"></div>
-    <p id="window-help" class="sr-only">可拖动标题栏移动窗口，也可聚焦标题栏后用方向键移动，按住 Shift 加快移动。窗口右下角可调整大小，Escape 关闭当前窗口。</p>
+    <p id="window-help" class="sr-only">可拖动标题栏移动窗口，也可聚焦标题栏后用方向键移动，按住 Shift 加快移动，窗口右下角可调整大小，Escape 关闭当前窗口</p>
     <p id="announcer" class="sr-only" role="status" aria-live="polite"></p>
   </main>`
 
@@ -204,7 +204,7 @@ async function bootstrap() {
     loading.close({ restoreFocus: false })
     if (window.matchMedia('(min-width: 761px)').matches) panels.controls()
     panels.timeline()
-    announce('统计数据与 11 市地图已就绪，可从新建图表生成可视化窗口。')
+    announce('统计数据与 11 市地图已就绪，可从新建图表生成可视化窗口')
   } catch (error) {
     if (disposed) return
     console.error('数据初始化失败', error)

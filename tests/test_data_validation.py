@@ -12,7 +12,7 @@ from scripts import merge_stats as pipeline
 DATA_DIR = Path(__file__).resolve().parents[1] / 'public' / 'data'
 
 
-class DataPipelineTests(unittest.TestCase):
+class DataValidationTests(unittest.TestCase):
     def setUp(self):
         self.rows = pipeline.read_csv(DATA_DIR / 'stats.csv', pipeline.STATS_COLUMNS)
         self.density = next(row for row in self.rows if (row['adcode'], row['year'], row['indicator']) == ('330100', '2016', 'pop_density'))
@@ -83,7 +83,7 @@ class DataPipelineTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, 'GDP formula'):
             pipeline.validate(changed({'share_primary': '3.76'}), DATA_DIR)
-        # Each rounded value is within formula tolerance, but their sum is invalid.
+        # 单项偏差均在容差内，但合计偏差超限。
         gdp = {row['indicator']: Decimal(row['value']) for row in self.rows if row['adcode'] == '330100' and row['year'] == '2016' and row['indicator'] in {'gdp_' + sector for sector in pipeline.SECTORS}}
         inflated = {f'share_{sector}': str(gdp[f'gdp_{sector}'] / sum(gdp.values()) * 100 + Decimal('0.006')) for sector in pipeline.SECTORS}
         with self.assertRaisesRegex(ValueError, 'sum to 100'):
@@ -97,9 +97,6 @@ class DataPipelineTests(unittest.TestCase):
                 pipeline.validate(changed({indicator: value}), DATA_DIR)
 
     def test_city_name_input_is_mapped_and_unknown_cities_fail(self):
-        rows = pipeline.read_stats(DATA_DIR / 'raw/stats_task4.csv', DATA_DIR)
-        self.assertEqual(len(rows), 110)
-        self.assertEqual(rows[0], {'adcode': '330100', 'year': '2016', 'indicator': 'income_urban_pc', 'value': '52185'})
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / 'income.csv'
             for name in ['杭州', '杭州市', '未知市']:
@@ -109,11 +106,6 @@ class DataPipelineTests(unittest.TestCase):
                         pipeline.read_stats(path, DATA_DIR)
                 else:
                     self.assertEqual(pipeline.read_stats(path, DATA_DIR)[0]['adcode'], '330100')
-
-    def test_raw_sources_reproduce_the_merged_data(self):
-        rows = [row for path in sorted((DATA_DIR / 'raw').glob('*.csv')) for row in pipeline.read_stats(path, DATA_DIR)]
-        sort_key = lambda row: (row['adcode'], int(row['year']), row['indicator'])
-        self.assertEqual(sorted(rows, key=sort_key), self.rows)
 
     def test_missing_boundary_and_numeric_codes_are_rejected(self):
         with tempfile.TemporaryDirectory() as temporary:

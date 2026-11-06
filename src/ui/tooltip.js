@@ -1,6 +1,5 @@
 import { formatValue, isShareIndicator } from '../data/indicators.js'
 
-/** 当前年份的数值、全省排名，以及与上一年相比的变化（占比用百分点，其余用百分比）。 */
 export function describeCity(store, adcode, { indicator, year } = store.getState()) {
   const metadata = store.indicators.get(indicator)
   const value = store.getValue(indicator, year, adcode)
@@ -46,7 +45,7 @@ export function createMapTooltip({ target, store }) {
     tooltip.hidden = false
     const [x, y] = current.pixel
     const { width, height } = tooltip.getBoundingClientRect()
-    // 产业占比悬停时饼图会放大，提示框离远一些以免遮住扇区标签
+    // 为悬停放大的产业饼图留出标签空间
     const gap = isShareIndicator(store.getState().indicator) ? 72 : 16
     const flipX = x + gap + width > window.innerWidth - 8
     const flipY = y + gap + height > window.innerHeight - 8

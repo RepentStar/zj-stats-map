@@ -1,21 +1,26 @@
-# 交互模块（M1–M2）
+# 交互模块
 
-- `indicatorPicker.js`、`legend.js`、`tooltip.js`：按主题分组的指标切换、左下角停靠图例卡片（年份 + 色带或气泡参照）、地图悬停提示（数值、排名、较上年变化）。
-- `timeline.js`、`player.js`：动态年份滑块与播放控制（M2）。
-- `windows.js`：全屏地图上的非模态悬浮窗口，可拖动、调整大小、置顶和独立关闭。
+| 文件                 | 职责                               |
+| -------------------- | ---------------------------------- |
+| `indicatorPicker.js` | 按主题分组的指标切换               |
+| `legend.js`          | 左下角固定图例、当前年份与符号参照 |
+| `tooltip.js`         | 城市数值、全省排名与较上年变化     |
+| `timeline.js`        | 年份滑块、逐年切换及播放控件       |
+| `player.js`          | 播放状态、速度与循环控制           |
+| `windows.js`         | 非模态悬浮窗口管理                 |
 
-M1 的 `createIndicatorPicker({ target, store })` 与 `createLegend({ target, store, classifications })` 已实现，均返回销毁函数，取消订阅并清理控件。图例随表达方式切换：分级指标从高到低逐档列出数值范围及当年落在该档的城市数，当年为空的档位变淡，有缺失时列出“无数据”；总量指标显示气泡面积参照（真实像素尺寸）与 11 市合计；产业占比显示扇区配色与饼图大小参照。图例区高度固定，切换指标或年份时卡片不跳动。
+## 控件与播放
 
-M2 已实现：`createPlayer(store, { intervalMs = 1000, loop = false })` 返回 `play/pause/toggle/setIntervalMs/setLoop/getState/subscribe/destroy`。播放状态独立于 Store，年份写入 Store。末年启动时重播，默认抵达末年立即暂停；循环时在末年停留一个间隔再回首年。速度变更替换计时器，单年份不启动播放。
+指标选择器、图例和时间轴均订阅 Store，返回销毁函数。图例按指标显示固定分级及当年城市数、总量气泡参照或产业饼图参照。提示中的产业占比变化使用百分点，其余指标使用百分比
 
-`createTimeline({ target, store, player })` 返回销毁函数。滑块按实际年份索引取值，支持非连续年份；提供上一年/下一年、播放/暂停、0.5/1/2 秒间隔和循环控制。滑块 pointerdown/input 均暂停播放。
+`createPlayer(store, { intervalMs = 1000, loop = false })` 提供 `play/pause/toggle/setIntervalMs/setLoop/getState/subscribe/destroy`。播放状态独立于 Store，年份写入共享状态。末年启动从首年重播，默认到末年暂停；循环时在末年停留一个间隔。速度变更替换计时器，单年份不启动播放
 
-年份来自 `store.years`，控件通过 `store.setState()` 更新共享状态。播放默认间隔 1000 ms、末年停止；手动拖动时暂停。组件销毁时取消订阅和计时器。
+`createTimeline({ target, store, player })` 按实际年份索引选择，支持非连续年份，提供 0.5/1/2 秒间隔。手动切换年份或关闭时间轴会暂停播放
 
-`createWindowManager({ target, fallbackFocus })` 提供 `open/closeAll/destroy`。`open({ key, title, width, placement, trigger })` 返回 `element/body/heading/isNew/closed/onClose/close`：有 `key` 的控件复用已有窗口并置顶，无 `key` 的图表每次创建新窗口。关闭时先执行 `onClose` 注册的销毁回调，再移除节点，并将键盘焦点返回触发按钮或工具栏。
+## 窗口
 
-标题栏支持 Pointer Events 拖动和方向键移动，Shift 加方向键加快移动；Escape 关闭当前窗口。窗口采用 `role="dialog"`、`aria-modal="false"`，不阻塞地图，不锁定焦点。移动或视口缩小时限制窗口范围，避免标题栏被工具栏遮住。右下角使用浏览器原生 resize；内容区可滚动，图表观察自身尺寸变化。
+`createWindowManager({ target, fallbackFocus })` 提供 `open/closeAll/destroy`。`open({ key, title, width, placement, trigger })` 返回 `element/body/heading/isNew/closed/onClose/close`。有 key 的控件复用已有窗口，无 key 的图表每次创建新窗口
 
-入口为控制面板、时间轴和图表选择器分别注册生命周期，图例卡片常驻；关闭时间轴时暂停播放并取消控件订阅，重新打开时恢复当前年份。关闭全部会销毁所有悬浮窗口，工具栏始终可用于重新打开。
+标题栏支持拖动和方向键移动，Shift 加方向键加快移动，Escape 关闭窗口；右下角可调整大小。窗口使用非模态 dialog 语义，聚焦时置顶，移动及视口变化时限制边界。关闭时执行清理回调，并在窗口持有焦点时恢复到触发按钮或工具栏
 
-界面保留控件标签与必要状态反馈，省去分级、播放规则和图表条件的说明段落。
+桌面默认打开控制面板和时间轴，手机默认只打开时间轴。图例常驻地图，关闭全部仅销毁悬浮窗口；控件可从工具栏重新打开

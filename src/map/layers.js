@@ -10,7 +10,7 @@ import Style from 'ol/style/Style.js'
 import { createCityStyle } from './style.js'
 import { createBaseLayer } from './tianditu.js'
 
-/** 省外遮罩：大矩形挖去各市外环，弱化省外底图，突出浙江轮廓。 */
+/** 从矩形中挖去各市外环，形成省外遮罩 */
 function createMaskLayer(features) {
   const holes = features.flatMap((feature) => {
     const geometry = feature.getGeometry()

@@ -1,4 +1,4 @@
-/** Playback state stays local; indicator, year and cities remain in the shared Store. */
+/** 播放状态独立维护，年份写入共享 Store */
 export function createPlayer(store, { intervalMs = 1000, loop = false } = {}) {
   const listeners = new Set()
   let timer = null
@@ -29,7 +29,6 @@ export function createPlayer(store, { intervalMs = 1000, loop = false } = {}) {
   }
   const play = () => {
     if (destroyed || state.status === 'playing' || store.years.length < 2) return
-    // The default year is the last year: starting playback replays from the first.
     if (store.getState().year === store.years.at(-1)) store.setState({ year: store.years[0] })
     update({ status: 'playing' })
     startTimer()

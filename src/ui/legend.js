@@ -4,7 +4,7 @@ import { BUBBLE_MAX_SIZE, bubbleSize, maxIndustryTotal, PIE_MAX_RADIUS, pieRadiu
 
 const SVG = 'http://www.w3.org/2000/svg'
 
-/** 取 1/2/5×10ⁿ 的整齐数值，作为气泡图例的参考刻度。 */
+/** 图例刻度取不超过数值的 1/2/5×10ⁿ */
 function niceValue(value) {
   if (!(value > 0)) return 0
   const power = 10 ** Math.floor(Math.log10(value))
@@ -28,10 +28,6 @@ function swatchRow(color, label, count) {
   return row
 }
 
-/**
- * 分级图例：从高到低逐档列出数值范围，并标注当年落在该档的城市数。
- * 分级跨年份固定，当年没有城市的档位变淡，避免“图例 5 档、地图只见 2 色”的困惑。
- */
 function createClasses(store, classification, metadata, year) {
   const cities = [...store.regions.values()].filter((region) => region.level === 'city')
   const counts = new Array(classification.colors.length).fill(0)
@@ -52,10 +48,7 @@ function createClasses(store, classification, metadata, year) {
   return list
 }
 
-/**
- * 符号大小参照按地图上的真实像素绘制：画布尺寸固定为最大符号大小，
- * 圆心与底边对齐的位置不随指标变化，切换指标时只有圆的大小改变。
- */
+/** 固定画布内底部对齐符号，切换指标时保持图例布局稳定 */
 function createSizeKey({ max, size, diameter, fill, stroke }) {
   const values = [...new Set([niceValue(max), niceValue(max / 4)])].filter((value) => value > 0)
   const width = size + 84
@@ -101,16 +94,11 @@ function createPieKey(indicator, palette, industryMax) {
   const size = createSizeKey({ max: industryMax, size: PIE_MAX_RADIUS * 2,
     diameter: (value) => pieRadius(value, industryMax) * 2, fill: '#a9b3bf', stroke: '#8a95a3' })
   const caption = element('p', 'legend-note', '圆大小：三次产业增加值合计（亿元）')
-  // 扇区配色与大小参照并排，卡片高度与分级图例一致
   const split = element('div', 'legend-split')
   split.append(list, size)
   return [split, caption]
 }
 
-/**
- * 停靠在地图左下角的图例卡片：大号年份 + 指标名称 + 图例。
- * 总量指标显示气泡大小参照，比率指标逐档列出范围与城市数，产业占比说明饼图扇区。
- */
 export function createLegend({ target, store, classifications }) {
   const year = element('p', 'map-key-year')
   year.setAttribute('aria-live', 'polite')

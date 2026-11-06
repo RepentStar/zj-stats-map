@@ -29,7 +29,6 @@ function code(value) {
   return value
 }
 
-/** Pure parsing entry point, shared by the browser loader and data tests. */
 export function parseData({ regionsText, indicatorsText, statsText, geojson }) {
   const regions = parseCsv(regionsText, 'regions').map((row) => ({
     ...row,

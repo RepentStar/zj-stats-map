@@ -1,4 +1,3 @@
-/** Non-modal independent windows; the map remains interactive between panels. */
 export function createWindowManager({ target, fallbackFocus }) {
   const panels = new Map()
   let serial = 0
@@ -100,8 +99,7 @@ export function createWindowManager({ target, fallbackFocus }) {
       contain(element, rect.left + x * (event.shiftKey ? 64 : 16), rect.top + y * (event.shiftKey ? 64 : 16))
     })
     target.append(element)
-    // Callers fill the body synchronously after open(). Measure that content before
-    // converting bottom/right placement to coordinates for native window resizing.
+    // 等调用方填入内容后测量位置，再转换为原生缩放所需的左上坐标
     queueMicrotask(() => {
       if (panel.closed) return
       const rect = element.getBoundingClientRect()

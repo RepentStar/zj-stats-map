@@ -6,7 +6,7 @@ import { createIndustryOption } from './industryOptions.js'
 
 const classificationCache = new WeakMap()
 
-/** 与地图使用同一套跨年份分级，使排行条形颜色和地图面色一致。 */
+/** 与地图共用跨年份分级 */
 function classificationFor(snapshot, indicator) {
   if (!classificationCache.has(snapshot.stats)) classificationCache.set(snapshot.stats, new Map())
   const cache = classificationCache.get(snapshot.stats)
@@ -17,7 +17,6 @@ function classificationFor(snapshot, indicator) {
   return cache.get(indicator)
 }
 
-/** 排行条形颜色：总量指标用主题色，比率指标用该值在地图上的分级色。 */
 function barColor(snapshot, indicator, value) {
   const classification = classificationFor(snapshot, indicator)
   if (isCountIndicator(indicator)) return classification.palette[3]
@@ -42,7 +41,7 @@ export function createExploreOption(snapshot, type) {
   const base = {
     animation: false,
     textStyle: { fontFamily: '"Microsoft YaHei", sans-serif', color: '#526e65' },
-    aria: { enabled: true, label: { description: `${year} 年${metadata.label}，${metadata.unit}。` } },
+    aria: { enabled: true, label: { description: `${year} 年${metadata.label}，${metadata.unit}` } },
     tooltip: { trigger: 'item', renderMode: 'richText', confine: true,
       formatter: ({ data, percent }) => `${data.name}\n${formatValue(data.value, metadata)} ${metadata.unit}${type === 'pie' ? `\n当前范围占比 ${percent}%` : ''}` },
   }
@@ -60,7 +59,7 @@ export function createExploreOption(snapshot, type) {
       emphasis: { scaleSize: 5 }, data: rows }],
   }
   rows.sort((a, b) => b.value - a.value)
-  // Reserve space for full formatted values, including large per-capita GDP.
+  // 按完整数值标签的长度预留右侧空间
   const valueLabelWidth = Math.max(...rows.map((row) => formatValue(row.value, metadata).length)) * 7
   return {
     ...base,
